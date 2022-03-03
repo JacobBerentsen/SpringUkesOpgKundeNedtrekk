@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+        input {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+<div class="row">
+
+    <div class="col-md-6">
+        <h2>Registrer</h2>
+        <form class="form">
+            <div class="form-group">
+                <label for="fornavn">Fornavn</label>
+                <input type="text" id="fornavn"/>
+            </div>
+            <div class="form-group">
+                <label for="etternavn">Etternavn</label>
+                <input type="text" id="etternavn"/>
+            </div>
+            <div class="form-group">
+                <label>Bilmerke</label>
+                <div id="bileneMerke"></div>
+            </div>
+            <div class="form-group">
+                <label>Bilmodel</label>
+                <div id="bileneModel"></div>
+            </div>
+            <div class="form-group">
+                <input type="button" value="Registrer" class="btn btn-primary" onclick="lagreKunde()"/>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        <h2>Alle kunder</h2>
+        <table id="kundene" class="table"></table>
+        <a class="btn btn-danger" onclick="slettKundene()" >Slett alle kunder</a>
+    </div>
+
+</div>
+</div>
+
+<script>
+
+    $(function(){  // kjøres når dokumentet er ferdig lastet
+        hentAlleKunder();
+    });
+
+    function hentAlleKunder() {
+        $.get( "/hentKunder", function( kunder ) {
+            formaterKunder(kunder);
+        });
+    }
+
+    function formaterKunder(kunder){
+        let ut = "<table class='table table-striped'>" +
+            "<tr>" +
+            "<th>Fornavn</th><th>Etternavn</th><th>Merke</th><th>Model</th>" +
+            "</tr>";
+        for(const kunde of kunder ){
+            ut+="<tr>" +
+                "<td>"+kunde.fornavn+"</td>"+
+                "<td>"+kunde.etternavn+"</td>"+
+                "<td>"+kunde.eierBilMerke+"</td>" +
+                "<td>"+kunde.eierBilModel+"</td>" +
+                "</tr>";
+        }
+        $("#kundene").html(ut);
+    }
+
+    function slettKundene() {
+        $.get( "/slettAlleKunder", function() {
+            window.location.href = '/';
+        });
+    }
+
+    function lagreKunde() {
+        const kunde = {
+            fornavn : $("#fornavn").val(),
+            etternavn : $("#etternavn").val(),
+            eierBilMerke : $("#valgtBilMerke").val(),
+            eierBilModel : $("#valgtBilModel").val()
+        };
+        const url = "/lagreKunde";
+        $.post(url,kunde,function(){
+            window.location.href = '/';
+        });
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+
+        hentAlleBilMerke();
+
+    function hentAlleBilMerke() {
+        $.get( "/hentBilmerker", function( biler ) {
+            formaterBilMerker(biler);
+        });
+    }
+
+    function hentAlleBilModel(event) {
+        const bilMerke = event.target.value;
+        const url = "/hentBilmodel?bilMerke=" + bilMerke;
+        $.get(url, function( biler ) {
+            formaterBilModeler(biler);
+        });
+    }
+
+
+    function formaterBilMerker(biler){
+        const bileneMerke = $("#bileneMerke");
+        bileneMerke.html('');
+
+        let ut = "<select id='valgtBilMerke' onchange='hentAlleBilModel(event)'>";
+        for(const bil of biler ){
+            ut+="<option value='"+bil+"'>"+bil+"</option>";
+        }
+        ut+="</select>";
+        bileneMerke.html(ut);
+    }
+
+    function formaterBilModeler(biler){
+        let ut = "<select id='valgtBilModel'>";
+        for(const bil of biler ){
+            ut+="<option value='"+bil.modell+"'>"+bil.modell+"</option>";
+        }
+        ut+="</select>";
+        $("#bileneModel").html(ut);
+    }
+
+</script>
+</body>
+</html>
